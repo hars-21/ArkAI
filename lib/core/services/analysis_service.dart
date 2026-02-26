@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
+// import 'package:dio/dio.dart';
 import '../models/analysis_model.dart';
 
 class AnalysisService {
-  final Dio _dio = Dio();
+  // final Dio _dio = Dio();
 
   Future<AnalysisModel?> analyzeProduct(String url) async {
     try {
