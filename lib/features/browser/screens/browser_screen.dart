@@ -63,153 +63,130 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
             // Inject JavaScript
             const String script = r'''
-function render() {
-  function extractAmazonApplianceDetails() {
-    const getText = (selector) =>
-      document.querySelector(selector)?.innerText?.trim() || null;
-
-    const getMeta = (name) =>
-      document.querySelector(`meta[name="${name}"]`)?.content || null;
-
-    const data = {};
-
-    data.title = getText("#productTitle") || getMeta("title");
-
-    data.brand =
-      getText("#bylineInfo")?.replace("Brand:", "").trim() || getMeta("brand");
-
-    data.rating =
-      getText("span[data-hook=rating-out-of-text]") || getText(".a-icon-alt");
-
-    data.reviewCount = getText("#acrCustomerReviewText");
-
-    data.price = getText(".a-price .a-offscreen");
-
-    data.category =
-      document.querySelector("#wayfinding-breadcrumbs_feature_div a")
-        ?.innerText || null;
-
-    const specTable = document.querySelectorAll(
-      "#productDetails_techSpec_section_1 tr"
-    );
-
-    specTable.forEach((row) => {
-      const key = row.querySelector("th")?.innerText?.toLowerCase();
-      const value = row.querySelector("td")?.innerText?.trim();
-
-      if (!key || !value) return;
-
-      if (key.includes("watt")) data.powerRating = value;
-      if (key.includes("capacity")) data.capacity = value;
-      if (key.includes("energy")) data.annualEnergyConsumption = value;
-      if (key.includes("star")) data.energyStarRating = value;
-    });
-
-    Object.keys(data).forEach(
-      (key) =>
-        (data[key] === null || data[key] === undefined || data[key] === "") &&
-        delete data[key]
-    );
-
-    return data;
+(function () {
+  if (!location.pathname.includes("/dp/")) {
+    console.log("Not a product page");
+    return;
   }
 
-  function calculateScores(d) {
-    let pocketScore = 5;
+  if (document.getElementById("arkai-fab")) return;
 
-    if (d.energyStarRating) {
-      const match = d.energyStarRating.match(/\d/);
-      if (match) pocketScore = parseInt(match[0]) + 4;
-    }
+  const fab = document.createElement("div");
+  fab.id = "arkai-fab";
+  fab.innerHTML = "✨";
 
-    const safetyScore = "Safe";
+  Object.assign(fab.style, {
+    position: "fixed",
+    bottom: "40px",
+    right: "20px",
+    width: "65px",
+    height: "65px",
+    borderRadius: "50%",
+    background: "#7c3aed",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "28px",
+    cursor: "pointer",
+    zIndex: "2147483647",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+  });
 
-    let treeEquivalent = "2 Trees";
+  document.body.appendChild(fab);
 
-    if (d.energyStarRating) {
-      const match = d.energyStarRating.match(/\d/);
-      if (match) {
-        const stars = parseInt(match[0]);
-        treeEquivalent = `${stars * 2} Trees`;
-      }
-    }
+  function renderArkAIUI(productUrl) {
+    if (document.getElementById("arkai-overlay")) return;
 
-    return {
-      pocketScore: Math.min(pocketScore, 10),
-      safetyScore,
-      treeEquivalent,
+    const overlay = document.createElement("div");
+    overlay.id = "arkai-overlay";
+
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "0",
+      background: "#0f0f0f",
+      color: "white",
+      zIndex: "2147483647",
+      overflowY: "auto",
+      fontFamily: "system-ui, sans-serif",
+      padding: "20px",
+    });
+
+    overlay.innerHTML = `
+      <div style="max-width:700px;margin:auto;">
+
+        <div style="display:flex;align-items:center;margin-bottom:30px;">
+          <div id="arkai-close" style="font-size:22px;cursor:pointer;margin-right:15px;">←</div>
+          <h1 style="font-size:26px;margin:0;">ArkAI Analysis</h1>
+        </div>
+
+        ${card("🔗", "Product Source", productUrl)}
+
+        ${card("✨", "AI Summary", "Mock Summary from Service.")}
+
+        <div style="display:flex;gap:15px;flex-wrap:wrap;">
+          ${miniCard("✅", "Pros", ["Mock Pro 1", "Mock Pro 2"], "#22c55e")}
+          ${miniCard("❌", "Cons", ["Mock Con 1", "Mock Con 2"], "#ef4444")}
+        </div>
+
+        ${card("💡", "Final Recommendation", "Mock Recommendation.")}
+
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById("arkai-close").onclick = () => {
+      overlay.remove();
     };
   }
 
-  const data = extractAmazonApplianceDetails();
-  const scores = calculateScores(data);
-
-  const box = document.createElement("div");
-
-  box.style.position = "fixed";
-  box.style.bottom = "0";
-  box.style.left = "0";
-  box.style.width = "100%";
-  box.style.background = "#111";
-  box.style.color = "#fff";
-  box.style.padding = "16px";
-  box.style.borderTopLeftRadius = "16px";
-  box.style.borderTopRightRadius = "16px";
-  box.style.boxShadow = "0 -5px 20px rgba(0,0,0,0.5)";
-  box.style.zIndex = "99999";
-  box.style.fontFamily = "system-ui";
-  box.style.maxHeight = "70vh";
-  box.style.overflowY = "auto";
-
-  box.innerHTML = `
-    <div style="font-size:16px;font-weight:600;margin-bottom:8px;">
-      ⚡ AI Appliance Insight
-    </div>
-
-    <div style="margin-bottom:12px;">
-      💰 <b>Pocket Score:</b> ${scores.pocketScore}/10 (High Savings)
-      <br/>
-      🛡 <b>Safety-Life:</b> ${scores.safetyScore}
-      <br/>
-      🌍 <b>Planet Score:</b> ${scores.treeEquivalent}
-    </div>
-
-    <button id="viewMoreBtn"
-      style="
-        background:#ff9900;
-        border:none;
-        padding:8px 12px;
-        border-radius:8px;
-        font-weight:600;
-        cursor:pointer;
-        width:100%;
+  function card(icon, title, content) {
+    return `
+      <div style="
+        background:#1c1c1c;
+        padding:20px;
+        border-radius:16px;
+        margin-bottom:20px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.4);
       ">
-      View More Details
-    </button>
+        <div style="font-weight:600;font-size:18px;margin-bottom:10px;">
+          ${icon} ${title}
+        </div>
+        <div style="opacity:0.8;line-height:1.6;word-break:break-word;">
+          ${content}
+        </div>
+      </div>
+    `;
+  }
 
-    <div id="moreDetails"
-      style="display:none;margin-top:12px;font-size:13px;">
-      ${Object.entries(data)
-        .map(
-          ([key, value]) =>
-            `<div style="margin-bottom:6px;">
-              <b>${key}:</b> ${value}
-            </div>`
-        )
-        .join("")}
-    </div>
-  `;
+  function miniCard(icon, title, items, color) {
+    return `
+      <div style="
+        flex:1;
+        min-width:250px;
+        background:#1c1c1c;
+        padding:20px;
+        border-radius:16px;
+        margin-bottom:20px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.4);
+      ">
+        <div style="font-weight:600;font-size:18px;margin-bottom:10px;color:${color}">
+          ${icon} ${title}
+        </div>
+        <ul style="padding-left:18px;opacity:0.85;">
+          ${items.map((i) => `<li style="margin-bottom:6px;">${i}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
 
-  document.body.appendChild(box);
-
-  document.getElementById("viewMoreBtn").addEventListener("click", () => {
-    const more = document.getElementById("moreDetails");
-    more.style.display = more.style.display === "none" ? "block" : "none";
-  });
-}
+  fab.onclick = () => {
+    renderArkAIUI(location.href);
+  };
+})();
 
 if (window.location.origin === "https://www.amazon.in" || window.location.origin === "https://amazon.in" || window.location.origin === "https://www.amazon.in/" || window.location.origin === "https://amazon.in/") {
-  render();
   ArkAIChannel.postMessage("AMAZON INDIA");
 } else if (window.location.origin === "https://www.flipkart.com" || window.location.origin === "https://flipkart.com" || window.location.origin === "https://www.flipkart.com/" || window.location.origin === "https://flipkart.com/") {
   alert("FLIPKART");
@@ -278,8 +255,7 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
               builder: (context, provider, child) {
                 if (provider.isProductPage) {
                   return Positioned(
-                    bottom:
-                        24, // Positioned slightly above the bottom navigation bar
+                    bottom: 24,
                     right: 24,
                     child: FloatingActionButton(
                       onPressed: () {
@@ -309,7 +285,7 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E), // Match dark background
+          color: const Color(0xFF1E1E1E),
           border: Border(
             top: BorderSide(
               color: Colors.white.withValues(alpha: 0.1),
@@ -319,7 +295,6 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
         ),
         child: Row(
           children: [
-            // Left navigation arrows (active look)
             IconButton(
               icon: const Icon(Icons.arrow_back_ios, size: 20),
               color: Colors.white,
@@ -377,7 +352,7 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
                                 vertical: 12,
                               ),
                             ),
-                            readOnly: true, // Just for display parity for now
+                            readOnly: true,
                           ),
                         ),
                         if (provider.isLoading)
@@ -396,8 +371,7 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
                           IconButton(
                             icon: const Icon(Icons.refresh, size: 16),
                             color: Colors.white.withValues(alpha: 0.5),
-                            onPressed: () =>
-                                _controller.reload(), // Reload the webview
+                            onPressed: () => _controller.reload(),
                             constraints: const BoxConstraints(),
                             padding: const EdgeInsets.only(right: 12),
                           ),
@@ -409,10 +383,9 @@ if (window.location.origin === "https://www.amazon.in" || window.location.origin
             ),
             const SizedBox(width: 12),
             IconButton(
-              icon: const Icon(Icons.close), // Cross icon
+              icon: const Icon(Icons.close),
               color: Colors.white,
-              onPressed: () =>
-                  context.go('/home'), // Close the page by going home
+              onPressed: () => context.go('/home'),
             ),
           ],
         ),

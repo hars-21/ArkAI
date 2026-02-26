@@ -313,7 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Blue pill
           Positioned(
             left: 20,
             bottom: 10,
@@ -339,7 +338,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          // Pink pill (overlapping)
           Positioned(
             right: 15,
             top: 25,
