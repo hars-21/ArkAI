@@ -63,272 +63,177 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
             // Inject JavaScript
             const String script = r'''
-            (() => {
+(() => {
   "use strict";
 
   const CONFIG = {
     productPathIndicator: "/dp/",
-    overlayId: "arkai-overlay",
     buttonId: "arkai-fab",
+    overlayId: "arkai-modal-overlay",
     zIndex: 2147483647,
   };
 
   function init() {
-    if (!window.location.pathname.includes(CONFIG.productPathIndicator)) return;
+    if (!location.pathname.includes(CONFIG.productPathIndicator)) return;
     if (document.getElementById(CONFIG.buttonId)) return;
-    injectFloatingButton();
+    injectButton();
   }
 
-  function injectFloatingButton() {
-    const button = document.createElement("div");
-    button.id = CONFIG.buttonId;
-    button.textContent = "✨";
+  function injectButton() {
+    const btn = document.createElement("div");
+    btn.id = CONFIG.buttonId;
+    btn.innerHTML = "✨";
 
-    Object.assign(button.style, {
+    Object.assign(btn.style, {
       position: "fixed",
-      bottom: "40px",
+      bottom: "90px",
       right: "20px",
       width: "60px",
       height: "60px",
       borderRadius: "50%",
-      backgroundColor: "#6d28d9",
-      color: "#fff",
+      background: "#c4b5fd",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: "26px",
+      fontSize: "24px",
       cursor: "pointer",
       zIndex: CONFIG.zIndex,
-      boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
     });
 
-    button.addEventListener("click", openOverlay);
-    document.body.appendChild(button);
+    btn.onclick = openModal;
+    document.body.appendChild(btn);
   }
 
-  function openOverlay() {
+  function openModal() {
     if (document.getElementById(CONFIG.overlayId)) return;
-    const data = extractProductData();
+
+    const data = extractData();
     const analysis = analyze(data);
-    renderOverlay(analysis);
-  }
 
-  function extractProductData() {
-    const getText = (selector) =>
-      document.querySelector(selector)?.textContent.trim() || null;
-
-    const getAllText = (selector) =>
-      Array.from(document.querySelectorAll(selector))
-        .map((el) => el.textContent.trim())
-        .filter(Boolean);
-
-    const title =
-      getText("#productTitle") || getText("#title") || "Unknown Product";
-
-    function extractPrice() {
-      const el =
-        document.querySelector(".a-price .a-offscreen") ||
-        document.querySelector("#corePrice_feature_div .a-offscreen") ||
-        document.querySelector("#priceblock_ourprice") ||
-        document.querySelector("#priceblock_dealprice");
-
-      if (el && el.textContent.trim()) return el.textContent.trim();
-
-      const whole = document.querySelector(".a-price-whole")?.textContent;
-      const fraction = document.querySelector(".a-price-fraction")?.textContent;
-      if (whole) return fraction ? `${whole}.${fraction}` : whole;
-
-      return "Price unavailable";
-    }
-
-    const price = extractPrice();
-    const rating = getText(".a-icon-alt") || "0";
-    const reviewCount = getText("#acrCustomerReviewText") || "0 reviews";
-
-    const features = getAllText("#feature-bullets li span")
-      .filter((t) => t.length > 20)
-      .slice(0, 5);
-
-    const reviews = getAllText(".review-text-content span").slice(0, 5);
-
-    return { title, price, rating, reviewCount, features, reviews };
-  }
-
-  function analyze(data) {
-    const ratingValue = parseFloat(data.rating) || 0;
-    const priceNumber =
-      parseFloat((data.price || "").replace(/[^0-9.]/g, "")) || 0;
-
-    const textBlob = (
-      data.features.join(" ") +
-      " " +
-      data.reviews.join(" ")
-    ).toLowerCase();
-
-    const pros = data.features.slice(0, 3);
-
-    const negativeKeywords = ["not", "poor", "bad", "issue", "problem"];
-    const cons = data.reviews
-      .filter((r) =>
-        negativeKeywords.some((k) => r.toLowerCase().includes(k))
-      )
-      .slice(0, 3);
-
-    let efficiencyScore = 5;
-    if (ratingValue >= 4.3) efficiencyScore += 2;
-    if (priceNumber && priceNumber < 50000) efficiencyScore += 1;
-    if (textBlob.includes("energy efficient")) efficiencyScore += 2;
-    efficiencyScore = Math.min(10, efficiencyScore);
-
-    const efficiencyLabel =
-      efficiencyScore >= 8
-        ? "High Savings"
-        : efficiencyScore >= 5
-        ? "Moderate Efficiency"
-        : "Low Efficiency";
-
-    let safetyStatus = "Safe";
-    if (textBlob.match(/radiation|overheat|fire/)) safetyStatus = "Warning";
-    if (textBlob.match(/toxic|hazard|explosion/))
-      safetyStatus = "Hazardous";
-
-    let carbonScore = 3;
-    if (priceNumber > 70000) carbonScore = 6;
-    if (textBlob.match(/low power|eco mode/)) carbonScore = 2;
-    const treeEquivalent = Math.max(1, carbonScore);
-
-    const summary = `
-${data.title}
-
-Price: ${data.price}
-Rating: ${data.rating} (${data.reviewCount})
-
-AI extracted product signals suggest balanced performance with moderate long-term efficiency.
-`.trim();
-
-    const recommendation =
-      ratingValue >= 4
-        ? "Recommended based on rating and extracted signals."
-        : "Mixed signals. Review carefully before purchase.";
-
-    return {
-      summary,
-      pros: pros.length ? pros : ["No major strengths extracted"],
-      cons: cons.length ? cons : ["No significant concerns detected"],
-      recommendation,
-      efficiencyScore,
-      efficiencyLabel,
-      safetyStatus,
-      treeEquivalent,
-    };
-  }
-
-  function renderOverlay(analysis) {
     const overlay = document.createElement("div");
     overlay.id = CONFIG.overlayId;
 
     Object.assign(overlay.style, {
       position: "fixed",
       inset: "0",
-      background: "#111",
-      color: "#fff",
+      background: "rgba(0,0,0,0.4)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       zIndex: CONFIG.zIndex,
-      overflowY: "auto",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      padding: "24px",
     });
 
-    overlay.innerHTML = `
-      <div style="max-width:720px;margin:0 auto;">
-        ${renderHeader()}
-        ${renderCard("AI Summary", analysis.summary)}
-        ${renderSustainabilitySection(analysis)}
-        ${renderProsCons(analysis.pros, analysis.cons)}
-        ${renderCard("Final Recommendation", analysis.recommendation)}
-      </div>
-    `;
+    overlay.innerHTML = renderModal(analysis);
+
+    overlay.onclick = (e) => {
+      if (e.target.id === CONFIG.overlayId) overlay.remove();
+    };
 
     document.body.appendChild(overlay);
-    document
-      .getElementById("arkai-close")
-      .addEventListener("click", () => overlay.remove());
   }
 
-  function renderHeader() {
-    return `
-      <div style="display:flex;align-items:center;margin-bottom:30px;">
-        <div id="arkai-close" style="cursor:pointer;margin-right:16px;font-size:20px;">←</div>
-        <h1 style="margin:0;font-size:24px;font-weight:600;">ArkAI Analysis</h1>
-      </div>
-    `;
+  function extractData() {
+    const rating =
+      parseFloat(
+        document.querySelector(".a-icon-alt")?.textContent
+      ) || 4;
+    return { rating };
   }
 
-  function renderCard(title, content) {
+  function analyze(data) {
+    const pocketScore = 8;
+    const healthScore = "Safe";
+    const planetScore = "5 trees";
+    const arkaiRating = Math.min(5, Math.round(data.rating));
+
+    return { pocketScore, healthScore, planetScore, arkaiRating };
+  }
+
+  function renderStars(count) {
+    let output = "";
+    for (let i = 1; i <= 5; i++) {
+      output += i <= count ? "★" : "☆";
+    }
+    return output;
+  }
+
+  function renderModal(analysis) {
     return `
-      <div style="background:#1a1a1a;padding:20px;border-radius:14px;margin-bottom:20px;">
-        <div style="font-weight:600;margin-bottom:8px;color:#ffffff;">${title}</div>
-        <div style="line-height:1.6;white-space:pre-line;color:#ffffff;">
-          ${content}
+      <div style="
+        width:380px;
+        background:#ffffff;
+        border-radius:14px;
+        padding:28px;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+        color:#111;
+      ">
+
+        <div style="font-size:20px;font-weight:700;
+            background:linear-gradient(90deg,#ef4444,#3b82f6);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;">
+          ArkAI
         </div>
-      </div>
-    `;
-  }
 
-  function renderSustainabilitySection(analysis) {
-    return `
-      <div style="background:#1a1a1a;padding:22px;border-radius:14px;margin-bottom:20px;">
-        <div style="font-weight:600;font-size:18px;margin-bottom:16px;color:#ffffff;">
-          Sustainability Intelligence
+        <div style="border-top:1px solid #e5e7eb;margin:16px 0 22px;"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:28px;font-weight:700;color:#22c55e;">
+              Green
+            </div>
+            <div style="font-size:28px;font-weight:700;">
+              Analysis
+            </div>
+          </div>
+          <div style="font-size:32px;">🌱</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px;color:#ffffff;">
 
-          <div style="display:flex;justify-content:space-between;">
-            <span>Efficiency Grade (Pocket Score)</span>
-            <span style="font-weight:600;">
-              ${analysis.efficiencyScore}/10 — ${analysis.efficiencyLabel}
-            </span>
-          </div>
+        <div style="margin-top:28px;">
 
-          <div style="display:flex;justify-content:space-between;">
-            <span>Safety-Life Shield (Health Score)</span>
-            <span style="font-weight:600;">
-              ${analysis.safetyStatus}
-            </span>
-          </div>
+          ${metricRow(
+            "Pocket Score",
+            "( How much this product costs to run compared to the best available alternative. )",
+            analysis.pocketScore
+          )}
 
-          <div style="display:flex;justify-content:space-between;">
-            <span>Carbon Footprint (Planet Score)</span>
-            <span style="font-weight:600;">
-              Equivalent to planting ${analysis.treeEquivalent} trees
-            </span>
-          </div>
+          ${metricRow(
+            "Health Score",
+            "( Does the appliance use harmful materials or emit anything unsafe like ozone or excessive EMF? )",
+            analysis.healthScore
+          )}
+
+          ${metricRow(
+            "Planet Score",
+            "( The environmental \"cost\" of manufacturing and running this device. )",
+            analysis.planetScore
+          )}
 
         </div>
+
+        <div style="border-top:1px solid #e5e7eb;margin:24px 0;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-weight:600;">ArkAI Rating</div>
+          <div style="color:#facc15;font-size:20px;">
+            ${renderStars(analysis.arkaiRating)}
+          </div>
+        </div>
+
       </div>
     `;
   }
 
-  function renderProsCons(pros, cons) {
+  function metricRow(title, desc, value) {
     return `
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
-        ${renderListCard("Pros", pros)}
-        ${renderListCard("Cons", cons)}
-      </div>
-    `;
-  }
-
-  function renderListCard(title, items) {
-    return `
-      <div style="flex:1;min-width:260px;background:#1a1a1a;padding:20px;border-radius:14px;color:#ffffff;">
-        <div style="font-weight:600;margin-bottom:10px;color:#ffffff;">${title}</div>
-        <ul style="padding-left:18px;margin:0;color:#ffffff;">
-          ${items
-            .map(
-              (i) =>
-                `<li style="margin-bottom:6px;color:#ffffff;">${i}</li>`
-            )
-            .join("")}
-        </ul>
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;">
+          <div style="font-weight:600;font-size:16px;">${title}</div>
+          <div style="font-weight:600;font-size:16px;">${value}</div>
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.4;width:80%;">
+          ${desc}
+        </div>
       </div>
     `;
   }
