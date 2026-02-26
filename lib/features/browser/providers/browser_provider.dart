@@ -11,7 +11,16 @@ class BrowserProvider extends ChangeNotifier {
 
   void setUrl(String url) {
     _currentUrl = url;
+    _checkIfProductPage(url);
     notifyListeners();
+  }
+
+  void _checkIfProductPage(String url) {
+    final lowerUrl = url.toLowerCase();
+    _isProductPage =
+        lowerUrl.contains('/dp/') ||
+        lowerUrl.contains('/p/') ||
+        lowerUrl.contains('/product/');
   }
 
   void setLoading(bool loading) {
