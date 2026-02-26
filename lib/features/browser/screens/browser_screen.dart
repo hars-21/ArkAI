@@ -48,7 +48,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browser'),
+        title: const Text('ArkAI'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -106,7 +106,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
             builder: (context, provider, child) {
               if (provider.isProductPage) {
                 return Positioned(
-                  bottom: 24,
+                  bottom: 80, // Adjusted to be above the address bar correctly
                   right: 24,
                   child: FloatingActionButton(
                     onPressed: () {
@@ -120,6 +120,114 @@ class _BrowserScreenState extends State<BrowserScreen> {
               }
               return const SizedBox.shrink();
             },
+          ),
+          // Bottom Address Bar (iOS Style)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 12.0,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E).withValues(alpha: 0.95),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, size: 20),
+                      color: Colors.white,
+                      onPressed: () async {
+                        if (await _controller.canGoBack()) {
+                          _controller.goBack();
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                      color: Colors.white,
+                      onPressed: () async {
+                        if (await _controller.canGoForward()) {
+                          _controller.goForward();
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Consumer<BrowserProvider>(
+                          builder: (context, provider, child) {
+                            String displayUrl = provider.currentUrl;
+                            if (displayUrl.isEmpty) {
+                              displayUrl = 'arkai://browser';
+                            }
+                            return Row(
+                              children: [
+                                const SizedBox(width: 12),
+                                Icon(
+                                  provider.currentUrl.isEmpty
+                                      ? Icons.search
+                                      : Icons.lock_outline,
+                                  size: 16,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    displayUrl,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      fontSize: 15,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (provider.isLoading)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 12.0),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.purpleAccent,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

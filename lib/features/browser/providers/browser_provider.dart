@@ -17,10 +17,20 @@ class BrowserProvider extends ChangeNotifier {
 
   void _checkIfProductPage(String url) {
     final lowerUrl = url.toLowerCase();
-    _isProductPage =
-        lowerUrl.contains('/dp/') ||
-        lowerUrl.contains('/p/') ||
-        lowerUrl.contains('/product/');
+
+    // Amazon
+    final isAmazonProduct =
+        lowerUrl.contains('/dp/') || lowerUrl.contains('/gp/product/');
+
+    // Flipkart
+    final isFlipkartProduct =
+        lowerUrl.contains('/p/') || lowerUrl.contains('pid=');
+
+    // Myntra
+    final isMyntraProduct =
+        lowerUrl.contains('/buy') || lowerUrl.contains(RegExp(r'/\d+/buy'));
+
+    _isProductPage = isAmazonProduct || isFlipkartProduct || isMyntraProduct;
   }
 
   void setLoading(bool loading) {
