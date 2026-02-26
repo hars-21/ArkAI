@@ -102,22 +102,26 @@ class _BrowserScreenState extends State<BrowserScreen> {
               return const SizedBox.shrink();
             },
           ),
+          Consumer<BrowserProvider>(
+            builder: (context, provider, child) {
+              if (provider.isProductPage) {
+                return Positioned(
+                  bottom: 24,
+                  right: 24,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      context.push('/analysis', extra: provider.currentUrl);
+                    },
+                    backgroundColor: Colors.purpleAccent,
+                    shape: const CircleBorder(),
+                    child: const Icon(Icons.auto_awesome, color: Colors.white),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
-      ),
-      floatingActionButton: Consumer<BrowserProvider>(
-        builder: (context, provider, child) {
-          if (provider.isProductPage) {
-            return FloatingActionButton.extended(
-              onPressed: () {
-                // TODO: Implement analysis feature
-              },
-              backgroundColor: Colors.purpleAccent,
-              icon: const Icon(Icons.auto_awesome),
-              label: const Text('Analyze with ArkAI'),
-            );
-          }
-          return const SizedBox.shrink();
-        },
       ),
     );
   }

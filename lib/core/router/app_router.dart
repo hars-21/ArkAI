@@ -13,7 +13,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/analysis',
-      builder: (context, state) => const AnalysisScreen(),
+      builder: (context, state) {
+        final url = state.extra as String?;
+        return AnalysisScreen(url: url ?? '');
+      },
     ),
   ],
 );

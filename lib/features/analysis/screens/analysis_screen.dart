@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AnalysisScreen extends StatelessWidget {
-  const AnalysisScreen({super.key});
+  final String url;
+
+  const AnalysisScreen({super.key, required this.url});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +16,9 @@ class AnalysisScreen extends StatelessWidget {
           onPressed: () => context.go('/'),
         ),
       ),
-      body: const Center(child: Text('Analysis Screen')),
+      body: Center(
+        child: Text('Analysis Screen\nURL: $url', textAlign: TextAlign.center),
+      ),
     );
   }
 }
