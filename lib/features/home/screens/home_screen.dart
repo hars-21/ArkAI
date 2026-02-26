@@ -29,43 +29,63 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E), // Dark theme
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 40,
-            bottom: 20,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Favourites Section
-              const Text(
-                'Favourites',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Centered Background Dynamic Logo
+            Positioned.fill(
+              child: Center(
+                child: Opacity(
+                  opacity: 0.15, // Make it light and translucent
+                  child: IgnorePointer(
+                    child: Transform.scale(
+                      scale: 1.2, // Slightly larger for background effect
+                      child: _buildDynamicLogo(),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
-              _buildFavouritesGrid(),
-
-              const SizedBox(height: 40),
-
-              // Green Report Section
-              const Text(
-                'Green Report',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+            ),
+            // Main Content
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 40,
+                bottom: 20,
               ),
-              const SizedBox(height: 16),
-              _buildGreenReportCard(),
-            ],
-          ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Favourites Section
+                  const Text(
+                    'Favourites',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildFavouritesGrid(),
+
+                  const SizedBox(height: 40),
+
+                  // Green Report Section
+                  const Text(
+                    'Green Report',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildGreenReportCard(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: _buildBottomAddressBar(),
@@ -259,9 +279,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.mic, size: 16),
+                      icon: const Icon(Icons.refresh, size: 16),
                       color: Colors.white.withValues(alpha: 0.5),
-                      onPressed: () {}, // Placeholder for mic
+                      onPressed: () {
+                        // On home screen, refresh doesn't do much, maybe clear or reset? For now simply empty action for UI consistency
+                      },
                       constraints: const BoxConstraints(),
                       padding: const EdgeInsets.only(right: 12),
                     ),
@@ -271,12 +293,79 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 12),
             IconButton(
-              icon: const Icon(Icons.filter_none), // Safari tabs icon
-              color: Colors.blueAccent,
-              onPressed: () {},
+              icon: const Icon(Icons.close), // Cross icon
+              color: Colors.white,
+              onPressed: () {
+                _urlController
+                    .clear(); // Clear the text field as a helpful action
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicLogo() {
+    return SizedBox(
+      width: 120,
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Blue pill
+          Positioned(
+            left: 20,
+            bottom: 10,
+            child: Transform.rotate(
+              angle: -0.6,
+              child: Container(
+                width: 36,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.indigo.shade900, Colors.blueAccent],
+                    begin: Alignment.bottomLeft,
+                    end: Alignment.topRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blueAccent.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Pink pill (overlapping)
+          Positioned(
+            right: 15,
+            top: 25,
+            child: Transform.rotate(
+              angle: 0.6,
+              child: Container(
+                width: 36,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.pinkAccent.shade100, Colors.redAccent],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.pinkAccent.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
