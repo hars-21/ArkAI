@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../../core/constants/app_constants.dart';
 import '../providers/browser_provider.dart';
 
 class BrowserScreen extends StatefulWidget {
-  const BrowserScreen({super.key});
+  final String? initialUrl;
+
+  const BrowserScreen({super.key, this.initialUrl});
 
   @override
   State<BrowserScreen> createState() => _BrowserScreenState();
@@ -38,6 +39,10 @@ class _BrowserScreenState extends State<BrowserScreen> {
           },
         ),
       );
+
+    if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
+      _loadUrl(widget.initialUrl!);
+    }
   }
 
   void _loadUrl(String url) {
@@ -51,33 +56,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
         title: const Text('ArkAI'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildSiteButton(
-                  title: 'Amazon',
-                  url: AppConstants.amazonUrl,
-                  color: Colors.orange,
-                ),
-                _buildSiteButton(
-                  title: 'Flipkart',
-                  url: AppConstants.flipkartUrl,
-                  color: Colors.blue,
-                ),
-                _buildSiteButton(
-                  title: 'Myntra',
-                  url: AppConstants.myntraUrl,
-                  color: Colors.pinkAccent,
-                ),
-              ],
-            ),
-          ),
+          onPressed: () => context.go('/home'),
         ),
       ),
       body: Stack(
@@ -230,34 +209,6 @@ class _BrowserScreenState extends State<BrowserScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSiteButton({
-    required String title,
-    required String url,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: ElevatedButton(
-          onPressed: () => _loadUrl(url),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color.withValues(alpha: 0.2),
-            foregroundColor: color,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: color.withValues(alpha: 0.5)),
-            ),
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
       ),
     );
   }

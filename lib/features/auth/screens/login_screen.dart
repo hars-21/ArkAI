@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        context.go('/browser');
+        context.go('/home');
       } else if (mounted) {
         ScaffoldMessenger.of(
           context,
