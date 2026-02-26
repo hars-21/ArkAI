@@ -63,7 +63,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
             // Inject JavaScript
             const String script = r'''
-(() => {
+            (() => {
   "use strict";
 
   const CONFIG = {
@@ -110,7 +110,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
     if (document.getElementById(CONFIG.overlayId)) return;
     const data = extractProductData();
     const analysis = analyze(data);
-    renderOverlay(window.location.href, analysis);
+    renderOverlay(analysis);
   }
 
   function extractProductData() {
@@ -126,21 +126,13 @@ class _BrowserScreenState extends State<BrowserScreen> {
       getText("#productTitle") || getText("#title") || "Unknown Product";
 
     function extractPrice() {
-      const selectors = [
-        ".a-price .a-offscreen",
-        "#priceblock_ourprice",
-        "#priceblock_dealprice",
-        "#corePriceDisplay_desktop_feature_div .a-offscreen",
-        "#corePrice_feature_div .a-offscreen",
-        ".a-price-whole",
-      ];
+      const el =
+        document.querySelector(".a-price .a-offscreen") ||
+        document.querySelector("#corePrice_feature_div .a-offscreen") ||
+        document.querySelector("#priceblock_ourprice") ||
+        document.querySelector("#priceblock_dealprice");
 
-      for (const sel of selectors) {
-        const el = document.querySelector(sel);
-        if (el && el.textContent.trim()) {
-          return el.textContent.trim();
-        }
-      }
+      if (el && el.textContent.trim()) return el.textContent.trim();
 
       const whole = document.querySelector(".a-price-whole")?.textContent;
       const fraction = document.querySelector(".a-price-fraction")?.textContent;
@@ -150,9 +142,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
     }
 
     const price = extractPrice();
-
-    const rating = getText(".a-icon-alt") || "No rating";
-    const reviewCount = getText("#acrCustomerReviewText") || "No reviews";
+    const rating = getText(".a-icon-alt") || "0";
+    const reviewCount = getText("#acrCustomerReviewText") || "0 reviews";
 
     const features = getAllText("#feature-bullets li span")
       .filter((t) => t.length > 20)
@@ -167,6 +158,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
     const ratingValue = parseFloat(data.rating) || 0;
     const priceNumber =
       parseFloat((data.price || "").replace(/[^0-9.]/g, "")) || 0;
+
     const textBlob = (
       data.features.join(" ") +
       " " +
@@ -177,8 +169,10 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
     const negativeKeywords = ["not", "poor", "bad", "issue", "problem"];
     const cons = data.reviews
-      .filter((r) => negativeKeywords.some((k) => r.toLowerCase().includes(k)))
-      .slice(0, 2);
+      .filter((r) =>
+        negativeKeywords.some((k) => r.toLowerCase().includes(k))
+      )
+      .slice(0, 3);
 
     let efficiencyScore = 5;
     if (ratingValue >= 4.3) efficiencyScore += 2;
@@ -190,27 +184,17 @@ class _BrowserScreenState extends State<BrowserScreen> {
       efficiencyScore >= 8
         ? "High Savings"
         : efficiencyScore >= 5
-          ? "Moderate Efficiency"
-          : "Low Efficiency";
+        ? "Moderate Efficiency"
+        : "Low Efficiency";
 
     let safetyStatus = "Safe";
-    if (
-      textBlob.includes("radiation") ||
-      textBlob.includes("overheat") ||
-      textBlob.includes("fire")
-    )
-      safetyStatus = "Warning";
-    if (
-      textBlob.includes("toxic") ||
-      textBlob.includes("hazard") ||
-      textBlob.includes("explosion")
-    )
+    if (textBlob.match(/radiation|overheat|fire/)) safetyStatus = "Warning";
+    if (textBlob.match(/toxic|hazard|explosion/))
       safetyStatus = "Hazardous";
 
     let carbonScore = 3;
     if (priceNumber > 70000) carbonScore = 6;
-    if (textBlob.includes("low power") || textBlob.includes("eco mode"))
-      carbonScore = 2;
+    if (textBlob.match(/low power|eco mode/)) carbonScore = 2;
     const treeEquivalent = Math.max(1, carbonScore);
 
     const summary = `
@@ -219,7 +203,7 @@ ${data.title}
 Price: ${data.price}
 Rating: ${data.rating} (${data.reviewCount})
 
-Customer feedback and extracted features suggest balanced performance with moderate long-term efficiency.
+AI extracted product signals suggest balanced performance with moderate long-term efficiency.
 `.trim();
 
     const recommendation =
@@ -239,7 +223,7 @@ Customer feedback and extracted features suggest balanced performance with moder
     };
   }
 
-  function renderOverlay(productUrl, analysis) {
+  function renderOverlay(analysis) {
     const overlay = document.createElement("div");
     overlay.id = CONFIG.overlayId;
 
@@ -265,7 +249,6 @@ Customer feedback and extracted features suggest balanced performance with moder
     `;
 
     document.body.appendChild(overlay);
-
     document
       .getElementById("arkai-close")
       .addEventListener("click", () => overlay.remove());
@@ -283,8 +266,10 @@ Customer feedback and extracted features suggest balanced performance with moder
   function renderCard(title, content) {
     return `
       <div style="background:#1a1a1a;padding:20px;border-radius:14px;margin-bottom:20px;">
-        <div style="font-weight:600;margin-bottom:8px;">${title}</div>
-        <div style="opacity:0.85;line-height:1.6;white-space:pre-line;">${content}</div>
+        <div style="font-weight:600;margin-bottom:8px;color:#ffffff;">${title}</div>
+        <div style="line-height:1.6;white-space:pre-line;color:#ffffff;">
+          ${content}
+        </div>
       </div>
     `;
   }
@@ -292,10 +277,10 @@ Customer feedback and extracted features suggest balanced performance with moder
   function renderSustainabilitySection(analysis) {
     return `
       <div style="background:#1a1a1a;padding:22px;border-radius:14px;margin-bottom:20px;">
-        <div style="font-weight:600;font-size:18px;margin-bottom:16px;">
+        <div style="font-weight:600;font-size:18px;margin-bottom:16px;color:#ffffff;">
           Sustainability Intelligence
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:14px;color:#ffffff;">
 
           <div style="display:flex;justify-content:space-between;">
             <span>Efficiency Grade (Pocket Score)</span>
@@ -326,18 +311,23 @@ Customer feedback and extracted features suggest balanced performance with moder
   function renderProsCons(pros, cons) {
     return `
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
-        ${renderListCard("Pros", pros, "#22c55e")}
-        ${renderListCard("Cons", cons, "#ef4444")}
+        ${renderListCard("Pros", pros)}
+        ${renderListCard("Cons", cons)}
       </div>
     `;
   }
 
-  function renderListCard(title, items, color) {
+  function renderListCard(title, items) {
     return `
-      <div style="flex:1;min-width:260px;background:#1a1a1a;padding:20px;border-radius:14px;">
-        <div style="font-weight:600;margin-bottom:10px;color:${color};">${title}</div>
-        <ul style="padding-left:18px;margin:0;">
-          ${items.map((i) => `<li style="margin-bottom:6px;">${i}</li>`).join("")}
+      <div style="flex:1;min-width:260px;background:#1a1a1a;padding:20px;border-radius:14px;color:#ffffff;">
+        <div style="font-weight:600;margin-bottom:10px;color:#ffffff;">${title}</div>
+        <ul style="padding-left:18px;margin:0;color:#ffffff;">
+          ${items
+            .map(
+              (i) =>
+                `<li style="margin-bottom:6px;color:#ffffff;">${i}</li>`
+            )
+            .join("")}
         </ul>
       </div>
     `;
@@ -345,6 +335,7 @@ Customer feedback and extracted features suggest balanced performance with moder
 
   init();
 })();
+
 ''';
 
             try {
