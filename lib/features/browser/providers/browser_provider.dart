@@ -4,10 +4,12 @@ class BrowserProvider extends ChangeNotifier {
   String _currentUrl = '';
   bool _isLoading = false;
   bool _isProductPage = false;
+  String _currentWebsite = '';
 
   String get currentUrl => _currentUrl;
   bool get isLoading => _isLoading;
   bool get isProductPage => _isProductPage;
+  String get currentWebsite => _currentWebsite;
 
   void setUrl(String url) {
     _currentUrl = url;
@@ -26,11 +28,11 @@ class BrowserProvider extends ChangeNotifier {
     final isFlipkartProduct =
         lowerUrl.contains('/p/') || lowerUrl.contains('pid=');
 
-    // Myntra
-    final isMyntraProduct =
-        lowerUrl.contains('/buy') || lowerUrl.contains(RegExp(r'/\d+/buy'));
+    // Nykaa
+    final isNykaaProduct =
+        lowerUrl.contains('/p/') || lowerUrl.contains('-product-');
 
-    _isProductPage = isAmazonProduct || isFlipkartProduct || isMyntraProduct;
+    _isProductPage = isAmazonProduct || isFlipkartProduct || isNykaaProduct;
   }
 
   void setLoading(bool loading) {
@@ -40,6 +42,11 @@ class BrowserProvider extends ChangeNotifier {
 
   void setProductPage(bool isProduct) {
     _isProductPage = isProduct;
+    notifyListeners();
+  }
+
+  void setWebsite(String website) {
+    _currentWebsite = website;
     notifyListeners();
   }
 }

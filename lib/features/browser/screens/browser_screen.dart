@@ -21,6 +21,33 @@ class _BrowserScreenState extends State<BrowserScreen> {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setOnJavaScriptAlertDialog((
+        JavaScriptAlertDialogRequest request,
+      ) async {
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Message from Website'),
+            content: Text(request.message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      })
+      ..addJavaScriptChannel(
+        'ArkAIChannel',
+        onMessageReceived: (JavaScriptMessage message) {
+          debugPrint('ArkAI JS Message Received: ${message.message}');
+          if (mounted) {
+            context.read<BrowserProvider>().setWebsite(message.message);
+          }
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (String url) {
@@ -29,9 +56,32 @@ class _BrowserScreenState extends State<BrowserScreen> {
               context.read<BrowserProvider>().setUrl(url);
             }
           },
-          onPageFinished: (String url) {
+          onPageFinished: (String url) async {
             if (mounted) {
               context.read<BrowserProvider>().setLoading(false);
+            }
+
+            // Inject JavaScript
+            const String script = '''
+              if (window.location.origin === "https://www.amazon.in" || window.location.origin === "https://amazon.in" || window.location.origin === "https://www.amazon.in/" || window.location.origin === "https://amazon.in/") {
+                alert("AMAZON INDIA");
+                ArkAIChannel.postMessage("AMAZON INDIA");
+              } else if (window.location.origin === "https://www.flipkart.com" || window.location.origin === "https://flipkart.com" || window.location.origin === "https://www.flipkart.com/" || window.location.origin === "https://flipkart.com/") {
+                alert("FLIPKART");
+                ArkAIChannel.postMessage("FLIPKART");
+              } else if (window.location.origin === "https://www.nykaa.com" || window.location.origin === "https://nykaa.com" || window.location.origin === "https://www.nykaa.com/" || window.location.origin === "https://nykaa.com/") {
+                alert("NYKAA");
+                ArkAIChannel.postMessage("NYKAA");
+              } else {
+                alert("OTHER WEBSITE");
+                ArkAIChannel.postMessage("OTHER WEBSITE");
+              }
+            ''';
+
+            try {
+              await _controller.runJavaScript(script);
+            } catch (e) {
+              debugPrint('Failed to run javascript: $e');
             }
           },
           onNavigationRequest: (NavigationRequest request) {
@@ -101,32 +151,26 @@ class _BrowserScreenState extends State<BrowserScreen> {
             },
           ),
           // Bottom Address Bar (iOS Style)
+          // Bottom Address Bar (iOS Style)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 12.0,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E).withValues(alpha: 0.95),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 0.5,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 8.0,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E), // Match dark background
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 0.5,
+                    ),
                   ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: SafeArea(
                 child: Row(
                   children: [
                     IconButton(
@@ -173,16 +217,17 @@ class _BrowserScreenState extends State<BrowserScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
-                                    displayUrl,
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.9,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      displayUrl,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
                                       ),
-                                      fontSize: 15,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 if (provider.isLoading)
@@ -196,12 +241,28 @@ class _BrowserScreenState extends State<BrowserScreen> {
                                         color: Colors.purpleAccent,
                                       ),
                                     ),
+                                  )
+                                else
+                                  IconButton(
+                                    icon: const Icon(Icons.refresh, size: 16),
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    onPressed: () => _controller.reload(),
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.only(right: 12),
                                   ),
                               ],
                             );
                           },
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                      ), // Replaced filter/tabs icon with close cross icon
+                      color: Colors.white,
+                      onPressed: () => context.go('/home'),
                     ),
                   ],
                 ),

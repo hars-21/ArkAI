@@ -27,223 +27,256 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // Dark theme like Arc Search
-      body: Stack(
-        children: [
-          // Center Arc-like Logo
-          Center(child: _buildDynamicLogo()),
-
-          // Bottom Elements (Cards + Search Bar)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 32,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildStoreCardsRow(context),
-                const SizedBox(height: 24),
-                _buildSearchBar(context),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDynamicLogo() {
-    return SizedBox(
-      width: 120,
-      height: 120,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Blue pill
-          Positioned(
+      backgroundColor: const Color(0xFF1E1E1E), // Dark theme
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(
             left: 20,
-            bottom: 10,
-            child: Transform.rotate(
-              angle: -0.6,
-              child: Container(
-                width: 36,
-                height: 90,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.indigo.shade900, Colors.blueAccent],
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueAccent.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                    ),
-                  ],
+            right: 20,
+            top: 40,
+            bottom: 20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Favourites Section
+              const Text(
+                'Favourites',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ),
-          // Pink pill (overlapping)
-          Positioned(
-            right: 15,
-            top: 25,
-            child: Transform.rotate(
-              angle: 0.6,
-              child: Container(
-                width: 36,
-                height: 90,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.pinkAccent.shade100, Colors.redAccent],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.pinkAccent.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                    ),
-                  ],
+              const SizedBox(height: 20),
+              _buildFavouritesGrid(),
+
+              const SizedBox(height: 40),
+
+              // Green Report Section
+              const Text(
+                'Green Report',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              _buildGreenReportCard(),
+            ],
           ),
-        ],
+        ),
       ),
+      bottomNavigationBar: _buildBottomAddressBar(),
     );
   }
 
-  Widget _buildStoreCardsRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  Widget _buildFavouritesGrid() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 4,
+      mainAxisSpacing: 20,
+      crossAxisSpacing: 10,
+      childAspectRatio: 0.75, // Adjust to fit icon and text
       children: [
-        _buildSmallStoreCard(
-          context: context,
+        _buildFavouriteItem(
           title: 'Amazon',
           url: AppConstants.amazonUrl,
           icon: Icons.local_mall,
-          color: Colors.orange,
+          color: Colors.white,
+          backgroundColor: Colors.orange,
         ),
-        _buildSmallStoreCard(
-          context: context,
+        _buildFavouriteItem(
           title: 'Flipkart',
           url: AppConstants.flipkartUrl,
           icon: Icons.shopping_cart,
-          color: Colors.blue,
+          color: Colors.white,
+          backgroundColor: Colors.blue,
         ),
-        _buildSmallStoreCard(
-          context: context,
-          title: 'Myntra',
-          url: AppConstants.myntraUrl,
-          icon: Icons.checkroom,
-          color: Colors.pinkAccent,
+        _buildFavouriteItem(
+          title: 'Nykaa',
+          url: AppConstants.nykaaUrl,
+          icon: Icons.face_retouching_natural,
+          color: Colors.white,
+          backgroundColor: Colors.pinkAccent,
+        ),
+        // Placeholder for Add button (looks like an empty Safari slot)
+        _buildFavouriteItem(
+          title: 'Add',
+          url: '',
+          icon: Icons.add,
+          color: Colors.white.withValues(alpha: 0.5),
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          isAdd: true,
         ),
       ],
     );
   }
 
-  Widget _buildSmallStoreCard({
-    required BuildContext context,
+  Widget _buildFavouriteItem({
     required String title,
     required String url,
     required IconData icon,
     required Color color,
+    required Color backgroundColor,
+    bool isAdd = false,
   }) {
-    return InkWell(
-      onTap: () => _navigateToUrl(url),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 100,
-        height: 100,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
+    return GestureDetector(
+      onTap: () {
+        if (!isAdd) _navigateToUrl(url);
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 65,
+            height: 65,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Icon(icon, color: color, size: 30),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildGreenReportCard() {
     return Container(
-      height: 60,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E), // Slightly lighter than background
-        borderRadius: BorderRadius.circular(10), // Pill shape
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.eco, // Green leaf icon to represent "Green Report"
+                color: Colors.green,
+                size: 28,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'In the last seven days, ArkAI has identified 0 sustainable alternatives for your searches.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search,
-            size: 22,
-            color: Colors.white.withValues(alpha: 0.5),
+    );
+  }
+
+  Widget _buildBottomAddressBar() {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E), // Match dark background
+          border: Border(
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 0.5,
+            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _urlController,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: 'Paste a product link...',
-                hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+        ),
+        child: Row(
+          children: [
+            // Left navigation arrows (inactive look)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios, size: 20),
+              color: Colors.white.withValues(alpha: 0.3),
+              onPressed: null,
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios, size: 20),
+              color: Colors.white.withValues(alpha: 0.3),
+              onPressed: null,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                border: InputBorder.none,
-                isDense: true,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.search,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _urlController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Search or enter website name',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ), // Adjust vertical alignment
+                        ),
+                        onSubmitted: (value) => _navigateToUrl(value),
+                        textInputAction: TextInputAction.go,
+                        keyboardType: TextInputType.url,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.mic, size: 16),
+                      color: Colors.white.withValues(alpha: 0.5),
+                      onPressed: () {}, // Placeholder for mic
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.only(right: 12),
+                    ),
+                  ],
+                ),
               ),
-              onSubmitted: (value) => _navigateToUrl(value),
-              textInputAction: TextInputAction.go,
-              keyboardType: TextInputType.url,
             ),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.arrow_forward_rounded,
-              color: Colors.white.withValues(alpha: 0.8),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: const Icon(Icons.filter_none), // Safari tabs icon
+              color: Colors.blueAccent,
+              onPressed: () {},
             ),
-            onPressed: () => _navigateToUrl(_urlController.text),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
