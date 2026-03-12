@@ -391,7 +391,6 @@ javascript:(function(){
           <div style="font-weight:700;font-size:15px;">ArkAI Rating</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="color:#facc15;font-size:22px;letter-spacing:1px;">${stars(arkaiRating)}</span>
-            <span style="font-size:12px;color:#9ca3af;">${reviews > 0 ? '(' + reviews.toLocaleString('en-IN') + ')' : ''}</span>
           </div>
         </div>
 
