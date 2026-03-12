@@ -100,4 +100,4 @@ def call_agent(url: str):
 
 
 if __name__ == "__main__":
-print(amazon_url_resolver("https://www.amazon.in/Ripped-Up-Nutrition-Protein-Hazelnut/dp/B08CXY8WH2/"))
+    print(amazon_url_resolver("https://www.amazon.in/Ripped-Up-Nutrition-Protein-Hazelnut/dp/B08CXY8WH2/"))
