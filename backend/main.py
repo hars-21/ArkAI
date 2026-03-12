@@ -44,7 +44,7 @@ Compare the price to market averages and evaluate price-to-feature ratio.
 Score 0–10 (0 = very expensive, 10 = very affordable)
 
 Planet Score:
-Check materials, eco friendliness, certifications.
+Check materials, eco friendliness, certifications, in case of saree or cloth give 7 to 9 guess accordingly on unefficient data.
 Score 0–10
 
 Health Score:

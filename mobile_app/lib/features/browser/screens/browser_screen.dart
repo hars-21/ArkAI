@@ -240,7 +240,7 @@ javascript:(function(){
     return offers;
   }
 
-  function computeAndShow(){
+  window.computeAndShow = function(){
     let apiData = window.arkaiApiData;
     let title = '';
     let price = 0;
@@ -261,19 +261,19 @@ javascript:(function(){
       isApiData = true;
       title = apiData.title || '';
       price = parseFloat((apiData.price || '').replace(/[^0-9.]/g, '')) || 0;
-      pocketScore = typeof apiData.budget_score === 'number' ? apiData.budget_score : 5;
-      let ps = typeof apiData.planet_score === 'number' ? apiData.planet_score : 5;
+      rating = getRating();
+      reviews = getReviews();
+      pocketScore = !isNaN(Number(apiData.budget_score)) ? Number(apiData.budget_score) : 5;
+      let ps = !isNaN(Number(apiData.planet_score)) ? Number(apiData.planet_score) : 5;
       planetScore = ps >= 7 ? '🟢 ' + ps : ps >= 4 ? '🟡 ' + ps : '🔴 ' + ps;
-      let hs = typeof apiData.health_score === 'number' ? apiData.health_score : 0;
+      let hs = !isNaN(Number(apiData.health_score)) ? Number(apiData.health_score) : 0;
       healthScore = hs >= 7 ? '✅ Safe' : hs >= 4 ? '🟡 Moderate' : '⚠️ Caution';
-      lifeScore = typeof apiData.life_score === 'number' ? apiData.life_score : null;
+      lifeScore = !isNaN(Number(apiData.life_score)) ? Number(apiData.life_score) : null;
       material = null;
       carbon = 0;
-      rating = 0;
-      reviews = 0;
       fullText = apiData.about || '';
       matDisplay = 'AI Analysis';
-      arkaiRating = Math.round((pocketScore + ps + (healthScore.includes('Safe')?10:healthScore.includes('Moderate')?5:2) + (lifeScore||5))/4);
+      arkaiRating = rating > 0 ? Math.round(rating) : pocketScore;
     } else {
       let titleEl=document.querySelector('#productTitle,h1');
       title=titleEl?(titleEl.innerText||'').trim():'';
@@ -293,7 +293,7 @@ javascript:(function(){
       matDisplay=material?(material.charAt(0).toUpperCase()+material.slice(1)):'Not detected';
     }
 
-    let offers = isApiData ? [] : getOffers();
+    let offers = getOffers();
 
     let offerCards=offers.map(o=>`
       <div style="min-width:195px;max-width:195px;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:13px 13px 11px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,0.05);box-sizing:border-box;flex-shrink:0;">
@@ -310,7 +310,7 @@ javascript:(function(){
       <div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
       <div style="font-weight:700;font-size:15px;margin-bottom:11px;">🏷️ Best Offers</div>
       <div style="display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">${offerCards}</div>
-    `:isApiData?'':`<div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
+    `:`<div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
       <div style="font-weight:700;font-size:15px;margin-bottom:8px;">🏷️ Best Offers</div>
       <div style="font-size:12px;color:#9ca3af;text-align:center;padding:10px 0;">No offers found on this page</div>
     `;
@@ -391,7 +391,7 @@ javascript:(function(){
           <div style="font-weight:700;font-size:15px;">ArkAI Rating</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="color:#facc15;font-size:22px;letter-spacing:1px;">${stars(arkaiRating)}</span>
-            <span style="font-size:12px;color:#9ca3af;">${isApiData ? '' : '(' + reviews.toLocaleString('en-IN') + ')'}</span>
+            <span style="font-size:12px;color:#9ca3af;">${reviews > 0 ? '(' + reviews.toLocaleString('en-IN') + ')' : ''}</span>
           </div>
         </div>
 
@@ -464,7 +464,7 @@ javascript:(function(){
   Future<Map<String, dynamic>?> _fetchApiData(String url) async {
     try {
       final response = await Dio().post(
-        'http://192.168.1.7:8000/analyze',
+        'http://192.168.0.102:8000/analyze',
         data: {'url': url},
         options: Options(
           sendTimeout: const Duration(seconds: 15),
@@ -505,12 +505,31 @@ javascript:(function(){
       ''');
 
       final apiData = await _fetchApiData(url);
+      debugPrint('API Response: $apiData');
 
       if (apiData != null) {
-        final jsonStr = jsonEncode(apiData).replaceAll("'", "\\'");
-        await _controller.runJavaScript(
-          "window.arkaiApiData = JSON.parse('$jsonStr'); computeAndShow();",
-        );
+        final jsonStr = jsonEncode(apiData);
+        debugPrint('JSON String: $jsonStr');
+        final encoded = Uri.encodeComponent(jsonStr);
+        try {
+          await _controller.runJavaScript(
+            'window.arkaiApiData = JSON.parse(decodeURIComponent("$encoded")); if(typeof computeAndShow === "function"){ computeAndShow(); } else { var ol=document.getElementById("arkai-overlay"); if(ol) ol.remove(); }',
+          );
+        } catch (e) {
+          debugPrint('JS Error: $e');
+          await _controller.runJavaScript('''
+            (function(){
+              var ol = document.getElementById('arkai-overlay');
+              if(ol) ol.remove();
+              var st = document.getElementById('arkai-style');
+              if(st) st.remove();
+              if(typeof computeAndShow === 'function'){
+                window.arkaiApiData = null;
+                computeAndShow();
+              }
+            })();
+          ''');
+        }
       } else {
         await _controller.runJavaScript('''
           (function(){
