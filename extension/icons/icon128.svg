@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="28" fill="#1e1e1e"/>
+  <!-- Left pillar -->
+  <rect x="22" y="18" width="28" height="82" rx="14" transform="rotate(-10 22 18)" fill="url(#gl)"/>
+  <!-- Right pillar -->
+  <rect x="78" y="12" width="28" height="82" rx="14" transform="rotate(10 78 12)" fill="url(#gr)"/>
+  <defs>
+    <linearGradient id="gl" x1="0" y1="100" x2="56" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="gr" x1="106" y1="0" x2="78" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f9a8d4"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+</svg>

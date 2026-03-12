@@ -1,0 +1,55 @@
+{
+	"manifest_version": 3,
+	"name": "ArkAI",
+	"version": "1.0.0",
+	"description": "ArkAI – Green Analysis for your online shopping. Get Pocket, Health & Planet scores instantly.",
+	"icons": {
+		"16": "icons/icon16.png",
+		"32": "icons/icon32.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	},
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "icons/icon16.png",
+			"32": "icons/icon32.png",
+			"48": "icons/icon48.png",
+			"128": "icons/icon128.png"
+		},
+		"default_title": "ArkAI"
+	},
+	"background": {
+		"service_worker": "src/background.js",
+		"type": "module"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"https://www.amazon.in/*",
+				"https://amazon.in/*",
+				"https://www.flipkart.com/*",
+				"https://flipkart.com/*",
+				"https://www.nykaa.com/*",
+				"https://nykaa.com/*"
+			],
+			"js": ["src/content.js"],
+			"run_at": "document_idle"
+		}
+	],
+	"permissions": ["storage", "activeTab", "scripting"],
+	"host_permissions": [
+		"https://www.amazon.in/*",
+		"https://amazon.in/*",
+		"https://www.flipkart.com/*",
+		"https://flipkart.com/*",
+		"https://www.nykaa.com/*",
+		"https://nykaa.com/*"
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["icons/*"],
+			"matches": ["<all_urls>"]
+		}
+	]
+}

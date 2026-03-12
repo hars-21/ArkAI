@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArkAI</title>
+    <link rel="stylesheet" href="src/popup.css" />
+</head>
+
+<body class="bg-[#111] text-white font-sans antialiased" style="width:360px;min-height:500px;">
+    <div id="app" class="w-90 min-h-125 relative overflow-hidden">
+
+        <div id="login-screen" class="flex flex-col items-center justify-center min-h-125 px-6 py-8 bg-[#0d0d0d]">
+            <div class="mb-4">
+                <svg viewBox="0 0 48 48" fill="none" width="44" height="44">
+                    <rect x="6" y="5" width="14" height="36" rx="7" transform="rotate(-10 6 5)" fill="url(#ll)" />
+                    <rect x="28" y="3" width="14" height="36" rx="7" transform="rotate(10 28 3)" fill="url(#lr)" />
+                    <defs>
+                        <linearGradient id="ll" x1="0" y1="41" x2="20" y2="0" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#1e3a8a" />
+                            <stop offset="100%" stop-color="#60a5fa" />
+                        </linearGradient>
+                        <linearGradient id="lr" x1="42" y1="0" x2="28" y2="41" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#f9a8d4" />
+                            <stop offset="100%" stop-color="#ef4444" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="text-base font-bold tracking-wide text-white mb-0.5">Welcome to ArkAI</h1>
+            <p class="text-[11px] text-white/40 mb-5">Sign in to continue</p>
+            <form id="login-form" class="w-full flex flex-col gap-2.5">
+                <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="16" x="2" y="4" rx="2" />
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                        </svg>
+                    </span>
+                    <input id="email" type="email" placeholder="Email" autocomplete="email" required
+                        class="input-field" />
+                </div>
+                <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="11" x="3" y="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    </span>
+                    <input id="password" type="password" placeholder="Password" autocomplete="current-password" required
+                        class="input-field" />
+                </div>
+                <p id="login-error" class="text-red-400 text-[11px] text-center h-3.5 leading-none"></p>
+                <button id="login-btn" type="submit"
+                    class="w-full h-9 bg-white text-black text-[13px] font-bold rounded-lg tracking-wide hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    Sign In
+                </button>
+            </form>
+        </div>
+
+        <div id="home-screen" class="hidden flex-col min-h-125 bg-[#111]">
+            <div class="flex-1 overflow-y-auto px-3.5 pt-3 pb-11 no-scrollbar">
+
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-base font-extrabold tracking-tight">
+                        <span
+                            class="bg-linear-to-r from-red-500 to-blue-500 bg-clip-text text-transparent">Ark</span><span
+                            class="text-white">AI</span>
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <div id="tab-status-badge"
+                            class="hidden items-center gap-1 px-2 py-0.5 bg-green-500/10 border border-green-500/25 rounded-md">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse"></span>
+                            <span class="text-green-400 text-[10px] font-semibold">Product</span>
+                        </div>
+                        <button id="logout-btn" title="Sign out"
+                            class="w-6 h-6 flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/8 rounded transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="analyze-card" class="hidden mb-3 p-2.5 bg-green-500/8 border border-green-500/20 rounded-xl">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[11px] font-semibold text-green-400 mb-0.5 flex items-center gap-1">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+                                </svg>
+                                Product detected
+                            </p>
+                            <p id="tab-url-display" class="text-[10px] text-white/30 truncate"></p>
+                        </div>
+                        <button id="run-analysis-btn"
+                            class="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[11px] font-semibold rounded-lg transition-colors">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                            </svg>
+                            Analyze
+                        </button>
+                    </div>
+                </div>
+
+                <p class="text-[9px] font-semibold text-white/25 uppercase tracking-widest mb-2">Favourites</p>
+                <div class="grid grid-cols-4 gap-1.5 mb-4">
+                    <a href="https://www.amazon.in" target="_blank"
+                        class="group flex flex-col items-center gap-1 cursor-pointer">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-[#FF9900] flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform shadow-lg shadow-black/30">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <path d="M16 10a4 4 0 0 1-8 0" />
+                            </svg>
+                        </div>
+                        <span class="text-[9px] text-white/40 font-medium">Amazon</span>
+                    </a>
+                    <a href="https://www.flipkart.com" target="_blank"
+                        class="group flex flex-col items-center gap-1 cursor-pointer">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-[#2874f0] flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform shadow-lg shadow-black/30">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1" />
+                                <circle cx="20" cy="21" r="1" />
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                            </svg>
+                        </div>
+                        <span class="text-[9px] text-white/40 font-medium">Flipkart</span>
+                    </a>
+                    <a href="https://www.nykaa.com" target="_blank"
+                        class="group flex flex-col items-center gap-1 cursor-pointer">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-[#fc2779] flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform shadow-lg shadow-black/30">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9" />
+                                <path
+                                    d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
+                            </svg>
+                        </div>
+                        <span class="text-[9px] text-white/40 font-medium">Nykaa</span>
+                    </a>
+                    <button id="add-fav-btn" class="group flex flex-col items-center gap-1">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-white/4 border border-dashed border-white/10 flex items-center justify-center group-hover:bg-white/7 group-active:scale-95 transition-all text-white/18 group-hover:text-white/35">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                        </div>
+                        <span class="text-[9px] text-white/18 font-medium">Add</span>
+                    </button>
+                </div>
+
+                <p class="text-[9px] font-semibold text-white/25 uppercase tracking-widest mb-2">Green Report</p>
+                <div class="p-3 bg-white/3 border border-white/7 rounded-xl">
+                    <div class="flex items-start gap-2.5">
+                        <div
+                            class="w-7 h-7 shrink-0 rounded-lg bg-green-500/10 flex items-center justify-center mt-0.5">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[11px] text-white/40 leading-relaxed">ArkAI identified <span id="green-count"
+                                    class="text-green-400 font-bold">0</span> product insights this session.</p>
+                            <button id="analyze-current-btn"
+                                class="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-green-400/70 hover:text-green-400 transition-colors">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                Analyze current page
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div
+                class="absolute bottom-0 left-0 right-0 h-10.5 bg-[#0d0d0d]/90 backdrop-blur-sm border-t border-white/6 flex items-center px-3 gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="text-white/15 shrink-0">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+                <span id="current-tab-url-bar" class="text-[10px] text-white/18 truncate flex-1">arkai://home</span>
+            </div>
+        </div>
+
+        <div id="analysis-screen" class="hidden absolute inset-0 bg-[#111] flex-col">
+
+            <div class="flex items-center justify-between px-3.5 py-2 border-b border-white/7 shrink-0">
+                <div class="flex items-center gap-2">
+                    <button id="back-btn"
+                        class="w-6 h-6 flex items-center justify-center text-white/35 hover:text-white hover:bg-white/8 rounded transition-colors">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6" />
+                        </svg>
+                    </button>
+                    <span class="text-[13px] font-semibold text-white">Green Analysis</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-green-500/60 tracking-wider uppercase">ArkAI</span>
+                </div>
+            </div>
+
+            <div id="analysis-loading" class="flex-1 flex flex-col items-center justify-center gap-2.5">
+                <div class="w-6 h-6 rounded-full border-2 border-green-500/20 border-t-green-500 animate-spin"></div>
+                <p class="text-[11px] text-white/30">Analyzing product…</p>
+            </div>
+
+            <div id="analysis-error"
+                class="hidden flex-1 flex-col items-center justify-center gap-2.5 px-6 text-center">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <p id="analysis-error-msg" class="text-[11px] text-white/40 leading-relaxed max-w-55"></p>
+                <button id="retry-btn"
+                    class="text-[11px] text-green-400 hover:text-green-300 font-semibold transition-colors">Try
+                    again</button>
+            </div>
+
+            <div id="analysis-results" class="hidden flex-1 overflow-y-auto px-3.5 py-3 no-scrollbar">
+
+                <div id="product-title-row" class="hidden mb-3 px-3 py-2 bg-white/3 border border-white/7 rounded-lg">
+                    <p id="product-title-text" class="text-[11px] text-white/40 leading-relaxed line-clamp-2"></p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="flex flex-col gap-1 p-2.5 bg-green-500/8 border border-green-500/15 rounded-xl">
+                        <div class="flex items-center gap-1 text-green-400 mb-0.5">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+                                <path d="M12 18V6" />
+                            </svg>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Pocket</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span id="pocket-score" class="text-[20px] font-black text-green-400 leading-none">—</span>
+                            <span class="text-[9px] text-white/20">/10</span>
+                        </div>
+                        <p id="price-display" class="text-[9px] text-white/25 truncate leading-tight mt-0.5"></p>
+                    </div>
+
+                    <div class="flex flex-col gap-1 p-2.5 bg-amber-500/8 border border-amber-500/15 rounded-xl">
+                        <div class="flex items-center gap-1 text-amber-400 mb-0.5">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4.5 9.5V5a2.5 2.5 0 0 1 5 0v4.5" />
+                                <path d="M9.5 9.5H5" />
+                                <path d="M9 18c-4.51 2-10-3.5-5-10h14c5 6.5-.49 12-5 10l-2 2z" />
+                            </svg>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Health</span>
+                        </div>
+                        <span id="health-score" class="text-[11px] font-bold text-white leading-snug">—</span>
+                        <p id="material-display" class="text-[9px] text-white/25 truncate leading-tight mt-0.5"></p>
+                    </div>
+
+                    <div class="flex flex-col gap-1 p-2.5 bg-blue-500/8 border border-blue-500/15 rounded-xl">
+                        <div class="flex items-center gap-1 text-blue-400 mb-0.5">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                                <path d="M2 12h20" />
+                            </svg>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Planet</span>
+                        </div>
+                        <span id="planet-score" class="text-[11px] font-bold text-white leading-snug">—</span>
+                        <p id="carbon-display" class="text-[9px] text-white/25 truncate leading-tight mt-0.5"></p>
+                    </div>
+                </div>
+
+                <div
+                    class="flex items-center justify-between px-3 py-2.5 bg-white/3 border border-white/7 rounded-xl mb-3">
+                    <div class="flex items-center gap-1.5">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" stroke-width="1"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <span class="text-[11px] font-semibold text-white">ArkAI Rating</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div id="star-bar" class="flex gap-0.5"></div>
+                        <span id="review-count" class="text-[10px] text-white/25"></span>
+                    </div>
+                </div>
+
+                <div id="offers-section" class="hidden">
+                    <p class="text-[9px] font-semibold text-white/25 uppercase tracking-widest mb-2">Best Offers</p>
+                    <div id="offers-container" class="flex flex-col gap-1.5"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <script type="module" src="src/popup.js"></script>
+</body>
