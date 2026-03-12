@@ -1,3 +1,5 @@
+const BACKEND_URL = "http://localhost:8000/analyze";
+
 chrome.runtime.onInstalled.addListener(() => {
 	chrome.action.setBadgeText({ text: "" });
 });
@@ -32,23 +34,45 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 	if (message.type === "RUN_ANALYSIS") {
 		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-			if (tabs.length > 0) {
-				chrome.tabs.sendMessage(tabs[0].id, { type: "TRIGGER_ANALYSIS" }, (response) => {
-					if (chrome.runtime.lastError) {
-						sendResponse({
-							error: "Content script not available. Navigate to a product page first.",
-						});
-					} else {
-						sendResponse(response || { error: "No response from page." });
-					}
-				});
-			} else {
+			if (!tabs.length) {
 				sendResponse({ error: "No active tab." });
+				return;
 			}
+			const url = tabs[0].url || "";
+			if (!isProductPage(url)) {
+				sendResponse({ error: "Not a supported product page. Navigate to Amazon or Flipkart." });
+				return;
+			}
+			callBackend(url)
+				.then((data) => sendResponse({ data }))
+				.catch((err) => sendResponse({ error: err.message }));
 		});
 		return true;
 	}
 });
+
+async function callBackend(url) {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 60000);
+	try {
+		const res = await fetch(BACKEND_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ url }),
+			signal: controller.signal,
+		});
+		if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+		return await res.json();
+	} catch (err) {
+		if (err.name === "AbortError")
+			throw new Error("Analysis timed out. The AI agent took too long.");
+		if (err.message.includes("fetch"))
+			throw new Error("Backend not reachable. Make sure the server is running on localhost:8000.");
+		throw err;
+	} finally {
+		clearTimeout(timeout);
+	}
+}
 
 function isProductPage(url) {
 	if (!url) return false;

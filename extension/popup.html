@@ -232,7 +232,8 @@
 
             <div id="analysis-loading" class="flex-1 flex flex-col items-center justify-center gap-2.5">
                 <div class="w-6 h-6 rounded-full border-2 border-green-500/20 border-t-green-500 animate-spin"></div>
-                <p class="text-[11px] text-white/30">Analyzing product…</p>
+                <p class="text-[11px] text-white/30">AI agent analyzing product…</p>
+                <p class="text-[10px] text-white/18">This may take up to a minute</p>
             </div>
 
             <div id="analysis-error"
@@ -266,7 +267,7 @@
                                 <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
                                 <path d="M12 18V6" />
                             </svg>
-                            <span class="text-[9px] font-bold uppercase tracking-wider">Pocket</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Budget</span>
                         </div>
                         <div class="flex items-baseline gap-0.5">
                             <span id="pocket-score" class="text-[20px] font-black text-green-400 leading-none">—</span>
@@ -301,6 +302,20 @@
                         </div>
                         <span id="planet-score" class="text-[11px] font-bold text-white leading-snug">—</span>
                         <p id="carbon-display" class="text-[9px] text-white/25 truncate leading-tight mt-0.5"></p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1 p-2.5 mb-3 bg-purple-500/8 border border-purple-500/15 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1 text-purple-400">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                                <path d="M12 6v6l4 2" />
+                            </svg>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Life Score</span>
+                        </div>
+                        <span id="life-score" class="text-[13px] font-black text-purple-400 leading-none">—</span>
                     </div>
                 </div>
 

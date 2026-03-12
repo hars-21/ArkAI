@@ -44,7 +44,8 @@
 		"https://www.flipkart.com/*",
 		"https://flipkart.com/*",
 		"https://www.nykaa.com/*",
-		"https://nykaa.com/*"
+		"https://nykaa.com/*",
+		"http://localhost:8000/*"
 	],
 	"web_accessible_resources": [
 		{

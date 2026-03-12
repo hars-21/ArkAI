@@ -86,64 +86,78 @@ function renderAnalysis(data) {
 	}
 
 	const pocketScore = $("pocket-score");
-	if (pocketScore) pocketScore.textContent = data.pocketScore ?? "—";
+	if (pocketScore) pocketScore.textContent = data.budget_score ?? "—";
 
 	const priceDisplay = $("price-display");
 	if (priceDisplay) {
-		priceDisplay.textContent = data.price ? `₹${data.price.toLocaleString("en-IN")}` : "Price N/A";
+		priceDisplay.textContent = data.price || "—";
 	}
 
 	const healthScore = $("health-score");
 	if (healthScore) {
-		healthScore.textContent = data.healthScore || "—";
+		const hs = data.health_score;
+		healthScore.textContent = hs != null ? `${hs}/10` : "—";
 		healthScore.className =
 			"text-[11px] font-bold leading-snug " +
-			(data.healthScore === "Caution" ? "text-amber-400" : "text-green-400");
+			(hs != null && hs < 5 ? "text-amber-400" : "text-green-400");
 	}
 
 	const materialDisplay = $("material-display");
 	if (materialDisplay) {
-		materialDisplay.textContent = data.material || "—";
+		materialDisplay.textContent = data.about
+			? data.about.slice(0, 60) + (data.about.length > 60 ? "…" : "")
+			: "—";
 	}
 
 	const planetScore = $("planet-score");
 	if (planetScore) {
-		planetScore.textContent = data.planetScore || "—";
-		const colorMap = {
-			"Low Impact": "text-green-400",
-			Moderate: "text-amber-400",
-			"High Impact": "text-red-400",
-		};
-		planetScore.className =
-			"text-[11px] font-bold leading-snug " + (colorMap[data.planetScore] || "text-white");
+		const ps = data.planet_score;
+		planetScore.textContent = ps != null ? `${ps}/10` : "—";
+		const color =
+			ps == null
+				? "text-white"
+				: ps >= 7
+					? "text-green-400"
+					: ps >= 4
+						? "text-amber-400"
+						: "text-red-400";
+		planetScore.className = "text-[11px] font-bold leading-snug " + color;
 	}
 
-	const carbonDisplay = $("carbon-display");
-	if (carbonDisplay) {
-		carbonDisplay.textContent = data.carbon ? `${data.carbon} kg CO₂` : "—";
+	const lifeScoreEl = $("life-score");
+	if (lifeScoreEl) {
+		const ls = data.life_score;
+		lifeScoreEl.textContent = ls != null ? `${ls}/10` : "—";
+		const color =
+			ls == null
+				? "text-purple-400"
+				: ls >= 7
+					? "text-green-400"
+					: ls >= 4
+						? "text-amber-400"
+						: "text-red-400";
+		lifeScoreEl.className = "text-[13px] font-black leading-none " + color;
 	}
 
 	const starBar = $("star-bar");
-	if (starBar) starBar.innerHTML = renderStars(data.arkaiRating || 0);
+	if (starBar) {
+		const avg =
+			data.budget_score != null &&
+			data.health_score != null &&
+			data.planet_score != null &&
+			data.life_score != null
+				? Math.round(
+						(data.budget_score + data.health_score + data.planet_score + data.life_score) / 4 / 2,
+					)
+				: 0;
+		starBar.innerHTML = renderStars(Math.max(1, Math.min(5, avg)));
+	}
 
 	const reviewCount = $("review-count");
-	if (reviewCount) {
-		reviewCount.textContent = data.reviews ? `(${data.reviews.toLocaleString("en-IN")})` : "";
-	}
+	if (reviewCount) reviewCount.textContent = "";
 
 	const offersSection = $("offers-section");
-	const offersContainer = $("offers-container");
-	if (offersContainer) {
-		if (data.offers && data.offers.length > 0) {
-			if (offersSection) {
-				offersSection.classList.remove("hidden");
-				offersSection.classList.add("block");
-			}
-			offersContainer.innerHTML = data.offers.map(renderOfferCard).join("");
-		} else {
-			if (offersSection) offersSection.classList.add("hidden");
-		}
-	}
+	if (offersSection) offersSection.classList.add("hidden");
 }
 
 function renderOfferCard(offer) {
@@ -187,7 +201,7 @@ async function triggerAnalysis() {
 
 	try {
 		const response = await new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => reject(new Error("Request timed out")), 10000);
+			const timeout = setTimeout(() => reject(new Error("Request timed out")), 65000);
 			chrome.runtime.sendMessage({ type: "RUN_ANALYSIS" }, (res) => {
 				clearTimeout(timeout);
 				if (chrome.runtime.lastError) {
@@ -225,8 +239,8 @@ async function triggerAnalysis() {
 		}
 		showAnalysisError(
 			e.message === "Request timed out"
-				? "Analysis timed out. Please try again."
-				: "Could not connect to page. Navigate to a product page and try again.",
+				? "Analysis timed out. The AI agent took too long — please try again."
+				: e.message || "Could not connect to the backend. Make sure the server is running.",
 		);
 	}
 }
