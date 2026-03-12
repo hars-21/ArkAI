@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:dio/dio.dart';
 import '../providers/browser_provider.dart';
 
 class BrowserScreen extends StatefulWidget {
@@ -237,23 +241,59 @@ javascript:(function(){
   }
 
   function computeAndShow(){
-    let titleEl=document.querySelector('#productTitle,h1');
-    let title=titleEl?(titleEl.innerText||'').trim():'';
-    let price=getPrice();
-    let rating=getRating();
-    let reviews=getReviews();
-    let fullText=title+' '+getFeatures();
-    let material=detectMaterial(fullText);
-    let carbon=estimateCarbon(material,price);
-    let pocketScore=price===0?5:price<500?9:price<1000?9:price<3000?8:price<6000?6:4;
-    let unsafe=['plastic','polyester','nylon'];
-    let healthScore=material&&unsafe.includes(material)?'⚠️ Caution':'✅ Safe';
-    let planetScore=carbon<50?'🟢 Low Impact':carbon<120?'🟡 Moderate':'🔴 High Impact';
-    let arkaiRating=Math.round((rating+(pocketScore/2))/2);
-    if(reviews>5000)arkaiRating=Math.min(5,arkaiRating+1);
-    if(reviews<100)arkaiRating=Math.max(1,arkaiRating-1);
-    let matDisplay=material?(material.charAt(0).toUpperCase()+material.slice(1)):'Not detected';
-    let offers=getOffers();
+    let apiData = window.arkaiApiData;
+    let title = '';
+    let price = 0;
+    let pocketScore = 5;
+    let healthScore = '⚠️ Caution';
+    let planetScore = '🔴 High Impact';
+    let lifeScore = null;
+    let material = null;
+    let carbon = 0;
+    let rating = 0;
+    let reviews = 0;
+    let fullText = '';
+    let matDisplay = 'Not detected';
+    let arkaiRating = 3;
+    let isApiData = false;
+
+    if(apiData && typeof apiData === 'object'){
+      isApiData = true;
+      title = apiData.title || '';
+      price = parseFloat((apiData.price || '').replace(/[^0-9.]/g, '')) || 0;
+      pocketScore = typeof apiData.budget_score === 'number' ? apiData.budget_score : 5;
+      let ps = typeof apiData.planet_score === 'number' ? apiData.planet_score : 5;
+      planetScore = ps >= 7 ? '🟢 ' + ps : ps >= 4 ? '🟡 ' + ps : '🔴 ' + ps;
+      let hs = typeof apiData.health_score === 'number' ? apiData.health_score : 0;
+      healthScore = hs >= 7 ? '✅ Safe' : hs >= 4 ? '🟡 Moderate' : '⚠️ Caution';
+      lifeScore = typeof apiData.life_score === 'number' ? apiData.life_score : null;
+      material = null;
+      carbon = 0;
+      rating = 0;
+      reviews = 0;
+      fullText = apiData.about || '';
+      matDisplay = 'AI Analysis';
+      arkaiRating = Math.round((pocketScore + ps + (healthScore.includes('Safe')?10:healthScore.includes('Moderate')?5:2) + (lifeScore||5))/4);
+    } else {
+      let titleEl=document.querySelector('#productTitle,h1');
+      title=titleEl?(titleEl.innerText||'').trim():'';
+      price=getPrice();
+      rating=getRating();
+      reviews=getReviews();
+      fullText=title+' '+getFeatures();
+      material=detectMaterial(fullText);
+      carbon=estimateCarbon(material,price);
+      pocketScore=price===0?5:price<500?9:price<1000?9:price<3000?8:price<6000?6:4;
+      let unsafe=['plastic','polyester','nylon'];
+      healthScore=material&&unsafe.includes(material)?'⚠️ Caution':'✅ Safe';
+      planetScore=carbon<50?'🟢 Low Impact':carbon<120?'🟡 Moderate':'🔴 High Impact';
+      arkaiRating=Math.round((rating+(pocketScore/2))/2);
+      if(reviews>5000)arkaiRating=Math.min(5,arkaiRating+1);
+      if(reviews<100)arkaiRating=Math.max(1,arkaiRating-1);
+      matDisplay=material?(material.charAt(0).toUpperCase()+material.slice(1)):'Not detected';
+    }
+
+    let offers = isApiData ? [] : getOffers();
 
     let offerCards=offers.map(o=>`
       <div style="min-width:195px;max-width:195px;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:13px 13px 11px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,0.05);box-sizing:border-box;flex-shrink:0;">
@@ -270,8 +310,7 @@ javascript:(function(){
       <div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
       <div style="font-weight:700;font-size:15px;margin-bottom:11px;">🏷️ Best Offers</div>
       <div style="display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">${offerCards}</div>
-    `:`
-      <div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
+    `:isApiData?'':`<div style="border-top:1px solid #e5e7eb;margin:18px 0 14px;"></div>
       <div style="font-weight:700;font-size:15px;margin-bottom:8px;">🏷️ Best Offers</div>
       <div style="font-size:12px;color:#9ca3af;text-align:center;padding:10px 0;">No offers found on this page</div>
     `;
@@ -331,10 +370,20 @@ javascript:(function(){
           <div style="background:#eff6ff;border-radius:14px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:700;font-size:14px;">🌍 Planet Score</div>
-              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;">Est. carbon: ${carbon} kg CO₂</div>
+              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;">${isApiData ? 'Environmental impact' : 'Est. carbon: ' + carbon + ' kg CO₂'}</div>
             </div>
             <div style="font-size:12.5px;font-weight:700;">${planetScore}</div>
           </div>
+
+          ${lifeScore !== null ? `
+          <div style="background:#f3e8ff;border-radius:14px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:700;font-size:14px;">🌿 Life Score</div>
+              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;">Overall sustainability</div>
+            </div>
+            <div style="font-size:26px;font-weight:800;color:#9333ea;">${lifeScore}<span style="font-size:13px;color:#9ca3af;">/10</span></div>
+          </div>
+          ` : ''}
 
         </div>
 
@@ -342,7 +391,7 @@ javascript:(function(){
           <div style="font-weight:700;font-size:15px;">ArkAI Rating</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="color:#facc15;font-size:22px;letter-spacing:1px;">${stars(arkaiRating)}</span>
-            <span style="font-size:12px;color:#9ca3af;">(${reviews.toLocaleString('en-IN')})</span>
+            <span style="font-size:12px;color:#9ca3af;">${isApiData ? '' : '(' + reviews.toLocaleString('en-IN') + ')'}</span>
           </div>
         </div>
 
@@ -370,7 +419,18 @@ javascript:(function(){
   fab.innerHTML='🌱';
   fab.addEventListener('touchstart',()=>{fab.style.transform='scale(0.88)';fab.style.boxShadow='0 2px 8px rgba(22,163,74,0.25)';},{passive:true});
   fab.addEventListener('touchend',()=>{fab.style.transform='scale(1)';fab.style.boxShadow='0 4px 20px rgba(22,163,74,0.45)';},{passive:true});
-  fab.addEventListener('click',computeAndShow);
+  fab.addEventListener('click',function(){
+    if(window.flutterWidget){
+      window.flutterWidget.invokeMethod('onFabClicked');
+    }else{
+      computeAndShow();
+    }
+  });
+  window.flutterWidget = {invokeMethod: function(method){
+    if(method === 'onFabClicked'){
+      window.location = 'arkai://fabClicked';
+    }
+  }};
   document.body.appendChild(fab);
 
 })();
@@ -383,6 +443,10 @@ javascript:(function(){
             }
           },
           onNavigationRequest: (NavigationRequest request) {
+            if (request.url.startsWith('arkai://fabClicked')) {
+              _onFabClicked();
+              return NavigationDecision.prevent;
+            }
             return NavigationDecision.navigate;
           },
         ),
@@ -395,6 +459,95 @@ javascript:(function(){
 
   void _loadUrl(String url) {
     _controller.loadRequest(Uri.parse(url));
+  }
+
+  Future<Map<String, dynamic>?> _fetchApiData(String url) async {
+    try {
+      final response = await Dio().post(
+        'http://192.168.1.7:8000/analyze',
+        data: {'url': url},
+        options: Options(
+          sendTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data as Map<String, dynamic>;
+      }
+    } on DioException catch (e) {
+      debugPrint('API Error: ${e.message}');
+    } catch (e) {
+      debugPrint('Error fetching API data: $e');
+    }
+    return null;
+  }
+
+  Future<void> _onFabClicked() async {
+    final url = context.read<BrowserProvider>().currentUrl;
+    if (url.isEmpty) return;
+
+    try {
+      await _controller.runJavaScript('''
+        (function(){
+          let old=document.getElementById('arkai-overlay');
+          if(old)old.remove();
+          let oldStyle=document.getElementById('arkai-style');
+          if(oldStyle)oldStyle.remove();
+          let st=document.createElement('style');
+          st.id='arkai-style';
+          document.head.appendChild(st);
+          const overlay=document.createElement('div');
+          overlay.id='arkai-overlay';
+          overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:2147483647;';
+          overlay.innerHTML='<div style="width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:40px 20px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,\\'Segoe UI\\',Roboto,sans-serif;"><div style="font-size:18px;font-weight:600;color:#111;margin-bottom:16px;">Analyzing Product...</div><div style="color:#6b7280;font-size:14px;">Please wait</div></div>';
+          document.body.appendChild(overlay);
+        })();
+      ''');
+
+      final apiData = await _fetchApiData(url);
+
+      if (apiData != null) {
+        final jsonStr = jsonEncode(apiData).replaceAll("'", "\\'");
+        await _controller.runJavaScript(
+          "window.arkaiApiData = JSON.parse('$jsonStr'); computeAndShow();",
+        );
+      } else {
+        await _controller.runJavaScript('''
+          (function(){
+            var ol = document.getElementById('arkai-overlay');
+            if(ol) ol.remove();
+            var st = document.getElementById('arkai-style');
+            if(st) st.remove();
+            if(typeof computeAndShow === 'function'){
+              window.arkaiApiData = null;
+              computeAndShow();
+            } else {
+              var fab = document.getElementById('arkai-fab');
+              if(fab) fab.style.display = 'flex';
+            }
+          })();
+        ''');
+      }
+    } catch (e) {
+      debugPrint('Error in FAB click: $e');
+      try {
+        await _controller.runJavaScript('''
+          (function(){
+            var ol = document.getElementById('arkai-overlay');
+            if(ol) ol.remove();
+            var st = document.getElementById('arkai-style');
+            if(st) st.remove();
+            if(typeof computeAndShow === 'function'){
+              window.arkaiApiData = null;
+              computeAndShow();
+            } else {
+              var fab = document.getElementById('arkai-fab');
+              if(fab) fab.style.display = 'flex';
+            }
+          })();
+        ''');
+      } catch (_) {}
+    }
   }
 
   @override
