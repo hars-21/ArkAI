@@ -1,0 +1,17 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ddgs>=9.11.3",
+    "dotenv>=0.9.9",
+    "fastapi>=0.135.1",
+    "googlesearch-python==1.2.3",
+    "langchain-groq>=1.1.2",
+    "langchain[groq]>=1.2.10",
+    "pydantic>=2.12.5",
+    "selectolax>=0.4.7",
+    "uvicorn>=0.41.0",
+]
