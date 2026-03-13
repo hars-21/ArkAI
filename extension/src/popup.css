@@ -24,3 +24,15 @@
         @apply w-full h-10 pl-9 pr-3 bg-white/5 border border-white/15 rounded-lg text-white text-[13px] placeholder-white/30 outline-none transition-colors focus:border-white/50;
     }
 }
+
+#analyse-contain {
+    width: 100%;
+}
+
+#analysis-results:not(.hidden) {
+    display: block;
+}
+
+#product-title-row:not(.hidden) {
+    display: block;
+}

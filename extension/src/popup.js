@@ -47,8 +47,8 @@ function renderHome() {
 		if (tabUrlDisplay) {
 			try {
 				const u = new URL(state.currentTab.url);
-				const path = u.pathname.slice(0, 28);
-				tabUrlDisplay.textContent = u.hostname + path + (u.pathname.length > 28 ? "…" : "");
+				const path = u.pathname.slice(0, 18);
+				tabUrlDisplay.textContent = u.hostname + path + (u.pathname.length > 18 ? "…" : "");
 			} catch {
 				tabUrlDisplay.textContent = state.currentTab.url.slice(0, 50);
 			}
@@ -80,9 +80,10 @@ function renderAnalysis(data) {
 	if (data.title && titleRow && titleText) {
 		titleText.textContent = data.title.length > 120 ? data.title.slice(0, 120) + "…" : data.title;
 		titleRow.classList.remove("hidden");
-		titleRow.classList.add("flex");
+		titleRow.classList.remove("flex");
 	} else if (titleRow) {
 		titleRow.classList.add("hidden");
+		titleRow.classList.remove("flex");
 	}
 
 	const pocketScore = $("pocket-score");
@@ -197,6 +198,7 @@ async function triggerAnalysis() {
 	if (results) {
 		results.classList.add("hidden");
 		results.classList.remove("flex");
+		results.classList.remove("block");
 	}
 
 	try {
@@ -224,7 +226,8 @@ async function triggerAnalysis() {
 			renderAnalysis(response.data);
 			if (results) {
 				results.classList.remove("hidden");
-				results.classList.add("flex");
+				results.classList.remove("flex");
+				results.classList.add("block");
 			}
 		} else {
 			showAnalysisError(
