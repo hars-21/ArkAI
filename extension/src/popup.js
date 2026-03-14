@@ -161,25 +161,6 @@ function renderAnalysis(data) {
 	if (offersSection) offersSection.classList.add("hidden");
 }
 
-function renderOfferCard(offer) {
-	const tagColors = {
-		SAVE: "bg-green-500/15 text-green-400",
-		COUPON: "bg-yellow-500/15 text-yellow-400",
-		EMI: "bg-blue-500/15 text-blue-400",
-		EXCHANGE: "bg-pink-500/15 text-pink-400",
-		OFFER: "bg-purple-500/15 text-purple-400",
-		DEAL: "bg-orange-500/15 text-orange-400",
-	};
-	const tagColor = tagColors[offer.tag] || "bg-white/10 text-white/50";
-	return `<div class="flex flex-col gap-1 px-3 py-2.5 bg-white/3 border border-white/7 rounded-lg">
-		<div class="flex items-center gap-1.5">
-			<span class="text-[11px] font-semibold text-white/70 flex-1 leading-tight">${offer.title}</span>
-			<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${tagColor}">${offer.tag}</span>
-		</div>
-		<p class="text-[10px] text-white/35 leading-snug">${offer.desc}</p>
-	</div>`;
-}
-
 async function triggerAnalysis() {
 	showScreen("analysis");
 

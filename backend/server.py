@@ -19,7 +19,7 @@ async def analyze(data: Data):
         print(response)
         return response
     except:
-        sleep(5)
+        await sleep(5)
         print("error ")
         return {
             "title": "Product Title",
